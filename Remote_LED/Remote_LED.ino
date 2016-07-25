@@ -34,7 +34,7 @@ void setup() {
   */
   do {
     byte * mac = set_mac();
-    Serial.println("Starting ethernet controller.....");
+    Serial.println(F("Starting ethernet controller....."));
 
     if (Ethernet.begin(mac)) {
       /*
@@ -51,7 +51,7 @@ void setup() {
       break;
     }else{
       free(mac);//Free the memory so we can loop again
-      serial_print("[ERROR]: Failed to start ethernet controller");
+      Serial.print(F("[ERROR]: Failed to start ethernet controller"));
     }
   } while (true);
 }
@@ -70,14 +70,14 @@ void loop() {
    Prints dhcp network configuration information to the serial port.
 */
 void print_network_information() {
-  serial_print("\n------------- DHCP Network Configuration --------------\n");
-  serial_print("IP address: ");
+  Serial.println(F("\n------------- DHCP Network Configuration --------------"));
+  Serial.print(F("IP address: "));
   Serial.println(Ethernet.localIP());
-  serial_print("Subnet mask: ");
+  Serial.print(F("Subnet mask: "));
   Serial.println(Ethernet.subnetMask());
-  serial_print("Gateway address: ");
+  Serial.print(F("Gateway address: "));
   Serial.println(Ethernet.gatewayIP());
-  serial_print("-------------------------------------------------------\n\n");
+  Serial.println(F("-------------------------------------------------------\n"));
 }
 
 /*
@@ -89,8 +89,8 @@ void httpRequest() {
 
   // if there's a successful connection:
   if (client.connect(server, 80)) {
-    serial_print("\nConnecting on socket #: ");
-    serial_print((char *) client.getSocketNumber());
+    Serial.print(F("\nConnecting on socket #: "));
+    Serial.print((char *) client.getSocketNumber());
     //Send the HTTP GET request to the server
     client.print("GET ");
     client.print("/ciamparichardd/public_html/camp/switch/Switch/one.txt");
@@ -103,11 +103,11 @@ void httpRequest() {
     /*
      * Wait for the http request response stream to be available
      */
-     serial_print("\nWaiting for http response ");
+     Serial.print(F("\nWaiting for http response "));
     do {
-      serial_print(".");
+      Serial.print(F("."));
       if (client.available()) {
-        serial_print(" Done!\n\n");
+        Serial.println(F(" Done!\n"));
         set_led_state(get_switch_state_from_response(&client));
         break;
       }
@@ -117,7 +117,7 @@ void httpRequest() {
     lastConnectionTime = millis();
   } else {
     //If you couldn't make a connection
-    serial_print("connection failed\n");
+    Serial.println(F("connection failed"));
   }
 
   /*
@@ -144,7 +144,7 @@ char get_switch_state_from_response(EthernetClient * client) {
   }
   char remote_switch_state = client->read();
   Serial.println(remote_switch_state);
-  serial_print("\nRequest complete.........\n\n");
+  Serial.println(F("\nRequest complete.........\n\n"));
 
   if (remote_switch_state == '0' || remote_switch_state == '1') {
     return remote_switch_state;
@@ -160,19 +160,19 @@ char get_switch_state_from_response(EthernetClient * client) {
 */
 void set_led_state(char value) {
   if (value != NULL) {
-    serial_print("Request has valid switch state value\n");
+    Serial.println(F("Request has valid switch state value"));
     if (value == '0') {
-      serial_print("Switch state: OFF\n");
-      //digitalWrite(LED_PIN, LOW); /* Use for timing example */
-      PORTB = PORTB & B101;
+      Serial.println(F("Switch state: OFF"));
+      digitalWrite(LED_PIN, LOW); /* Use for timing example */
+      //PORTB = PORTB & B101;
     } else {
-      serial_print("Switch state: ON\n");
-      //digitalWrite(LED_PIN, HIGH); /* Use for timing example */
-      PORTB = PORTB | B010;
+      Serial.println(F("Switch state: ON"));
+      digitalWrite(LED_PIN, HIGH); /* Use for timing example */
+      //PORTB = PORTB | B010;
     }
     //Serial.println(PORTB, BIN); /* Use for timing example */
   } else {
-    serial_print("[ERROR]: Request has invalid switch state value\n");
+    Serial.println(F("[ERROR]: Request has invalid switch state value"));
   }
 }
 
@@ -183,24 +183,15 @@ void renew_dhcp_lease(){
 
   switch(Ethernet.maintain()){
     case 0:
-    serial_print("\n[MSG]: DHCP lease is valid.....\n");
+    Serial.println(F("\n[MSG]: DHCP lease is valid....."));
     break;
     case 1:
-    serial_print("\n[ERROR]: DHCP renew lease failed.....\n");
+    Serial.println(F("\n[ERROR]: DHCP renew lease failed....."));
     break;
     case 2:
-    serial_print("\n[MSG]: IP address lease renewed.....\n");
+    Serial.println(F("\n[MSG]: IP address lease renewed....."));
     break;
   }
-}
-
-/*
- * Used to make program as small as posible. We save about
- * 100 bytes of program mem and 60 bytes of dynamic mem
- * using this singular method to serial print.
- */
-void serial_print(char * msg){
-    Serial.print(msg);
 }
 
 /*
